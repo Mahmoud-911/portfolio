@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Graftmotion — Video Editing & Motion Design</title>
+<style>
+  :root {
+    --orange: #FF6B00;
+    --orange-light: #FF8C00;
+    --orange-glow: rgba(255,107,0,.28);
+    --glass: rgba(255,255,255,.04);
+    --glass2: rgba(255,255,255,.07);
+    --border: rgba(255,255,255,.08);
+    --border-o: rgba(255,107,0,.25);
+    --text: #f5f5f7;
+    --muted: rgba(245,245,247,.48);
+    --muted2: rgba(245,245,247,.65);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body {
+    background:#000; color:var(--text);
+    font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;
+    min-height:100vh; overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  .bg { position:fixed; inset:0; z-index:0; overflow:hidden; }
+  .orb { position:absolute; border-radius:50%; filter:blur(80px); pointer-events:none; }
+  .o1 { width:70vw; height:70vw; top:-20vw; left:-10vw; background:radial-gradient(circle,rgba(255,107,0,.22) 0%,transparent 65%); animation:of1 14s ease-in-out infinite alternate; }
+  .o2 { width:50vw; height:50vw; bottom:-10vw; right:-10vw; background:radial-gradient(circle,rgba(255,60,0,.15) 0%,transparent 65%); animation:of2 10s ease-in-out infinite alternate; }
+  .o3 { width:40vw; height:40vw; top:40%; left:30%; background:radial-gradient(circle,rgba(255,140,0,.08) 0%,transparent 65%); animation:of3 18s ease-in-out infinite alternate; }
+  @keyframes of1 { 0%{transform:translate(0,0) scale(1);} 100%{transform:translate(5vw,4vh) scale(1.08);} }
+  @keyframes of2 { 0%{transform:translate(0,0) scale(1);} 100%{transform:translate(-6vw,-4vh) scale(1.12);} }
+  @keyframes of3 { 0%{transform:translate(0,0) scale(1);opacity:.5;} 100%{transform:translate(-8vw,6vh) scale(1.15);opacity:.9;} }
+  .layer { position:relative; z-index:1; }
+
+  /* NAV */
+  nav { position:fixed; top:0; left:0; right:0; z-index:200; height:60px; display:flex; align-items:center; justify-content:space-between; padding:0 52px; backdrop-filter:blur(24px) saturate(180%); -webkit-backdrop-filter:blur(24px) saturate(180%); background:rgba(0,0,0,.7); border-bottom:1px solid var(--border); }
+  .nav-logo { font-size:18px; font-weight:700; letter-spacing:-.4px; background:linear-gradient(135deg,#fff 0%,#ffb347 60%,var(--orange) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .nav-links { display:flex; gap:28px; list-style:none; }
+  .nav-links a { color:var(--muted); text-decoration:none; font-size:13.5px; font-weight:400; transition:color .2s; }
+  .nav-links a:hover { color:var(--text); }
+  .nav-cta { background:var(--orange); color:#fff; border:none; padding:7px 18px; border-radius:980px; font-size:13px; font-weight:500; cursor:pointer; text-decoration:none; transition:all .2s; }
+  .nav-cta:hover { background:var(--orange-light); box-shadow:0 0 24px var(--orange-glow); }
+
+  /* HERO */
+  .hero { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:80px 24px 120px; position:relative; }
+  .hero-badge { display:inline-flex; align-items:center; gap:8px; background:rgba(255,107,0,.12); border:1px solid rgba(255,107,0,.3); border-radius:980px; padding:6px 16px; font-size:11.5px; font-weight:500; letter-spacing:2px; text-transform:uppercase; color:var(--orange); margin-bottom:32px; opacity:0; animation:fadeUp .7s ease .1s forwards; }
+  .dot { width:6px; height:6px; border-radius:50%; background:var(--orange); animation:pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:.5;transform:scale(.8);} }
+  .hero-h1 { font-size:clamp(52px,9vw,102px); font-weight:700; letter-spacing:-3px; line-height:1.0; margin-bottom:8px; opacity:0; animation:fadeUp .8s ease .25s forwards; }
+  .hero-h1 .grad { background:linear-gradient(135deg,#fff 0%,#ffb347 40%,var(--orange) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .hero-sub { font-size:clamp(15px,2.2vw,19px); font-weight:300; color:var(--muted2); max-width:480px; line-height:1.65; margin:24px auto 48px; letter-spacing:.2px; opacity:0; animation:fadeUp .8s ease .4s forwards; }
+  .hero-btns { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; opacity:0; animation:fadeUp .8s ease .55s forwards; }
+  .btn-p { background:var(--orange); color:#fff; border:none; padding:13px 30px; border-radius:980px; font-size:14.5px; font-weight:500; cursor:pointer; text-decoration:none; transition:all .25s; }
+  .btn-p:hover { background:var(--orange-light); box-shadow:0 0 40px var(--orange-glow); transform:scale(1.03); }
+  .btn-s { background:var(--glass2); color:var(--text); border:1px solid var(--border); padding:13px 30px; border-radius:980px; font-size:14.5px; font-weight:500; cursor:pointer; text-decoration:none; transition:all .25s; backdrop-filter:blur(12px); }
+  .btn-s:hover { border-color:rgba(255,255,255,.2); background:rgba(255,255,255,.1); }
+  .scroll-hint { position:absolute; bottom:44px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:8px; opacity:0; animation:fadeUp .8s ease .8s forwards; }
+  .scroll-line { width:1px; height:44px; background:linear-gradient(to bottom,var(--orange),transparent); animation:sline 2.2s ease-in-out infinite; }
+  .scroll-text { font-size:9px; letter-spacing:2.5px; text-transform:uppercase; color:var(--muted); }
+  @keyframes sline { 0%,100%{transform:scaleY(1);opacity:1;} 50%{transform:scaleY(.4);opacity:.3;} }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(22px);} to{opacity:1;transform:translateY(0);} }
+
+  /* STATS */
+  .stats { border-top:1px solid var(--border); border-bottom:1px solid var(--border); display:grid; grid-template-columns:repeat(3,1fr); max-width:1100px; margin:0 auto; }
+  .stat { padding:44px 20px; text-align:center; border-right:1px solid var(--border); }
+  .stat:last-child { border-right:none; }
+  .stat-n { font-size:clamp(38px,5vw,58px); font-weight:700; letter-spacing:-2.5px; background:linear-gradient(135deg,#fff,var(--orange)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .stat-l { font-size:11px; letter-spacing:2.5px; text-transform:uppercase; color:var(--muted); margin-top:6px; }
+
+  /* SECTIONS */
+  .sec { padding:100px 52px; max-width:1100px; margin:0 auto; }
+  .sec-label { font-size:11px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:var(--orange); margin-bottom:14px; }
+  .sec-title { font-size:clamp(30px,4.5vw,50px); font-weight:700; letter-spacing:-1.2px; line-height:1.08; margin-bottom:14px; }
+  .sec-sub { font-size:16px; color:var(--muted); font-weight:300; max-width:460px; line-height:1.65; margin-bottom:56px; }
+
+  /* VIDEO GRID */
+  .vgrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:18px; }
+  .vcard { background:var(--glass); border:1px solid var(--border); border-radius:20px; overflow:hidden; cursor:pointer; transition:all .35s cubic-bezier(.23,1,.32,1); backdrop-filter:blur(10px); }
+  .vcard:hover { transform:translateY(-7px) scale(1.01); border-color:var(--border-o); box-shadow:0 28px 64px rgba(0,0,0,.55),0 0 40px rgba(255,107,0,.1); }
+  .vthumb { position:relative; aspect-ratio:16/9; overflow:hidden; background:#0d0d0d; }
+  .vthumb img, .vthumb video { width:100%; height:100%; object-fit:cover; transition:transform .4s ease; pointer-events:none; }
+  .vcard:hover .vthumb img, .vcard:hover .vthumb video { transform:scale(1.05); }
+  .play-ov { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.35); opacity:0; transition:opacity .3s; }
+  .vcard:hover .play-ov { opacity:1; }
+  .play-circle { width:54px; height:54px; background:rgba(255,107,0,.92); border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 0 30px rgba(255,107,0,.5); }
+  .play-circle svg { width:18px; height:18px; fill:#fff; margin-left:3px; }
+  .vinfo { padding:16px 20px 20px; }
+  .vtitle { font-size:14.5px; font-weight:500; margin-bottom:4px; letter-spacing:-.15px; }
+  .vmeta { font-size:11.5px; color:var(--muted); }
+  .empty-g { grid-column:1/-1; text-align:center; padding:80px 20px; color:var(--muted); }
+  .empty-g .ei { font-size:44px; opacity:.3; margin-bottom:14px; }
+  .empty-g p { font-size:15px; font-weight:300; }
+  .loading-g { grid-column:1/-1; text-align:center; padding:80px 20px; color:var(--muted); }
+  .spinner { width:32px; height:32px; border:2px solid rgba(255,107,0,.2); border-top-color:var(--orange); border-radius:50%; animation:spin .7s linear infinite; margin:0 auto 14px; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  /* SERVICES */
+  .sgrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px; }
+  .scard { background:var(--glass); border:1px solid var(--border); border-radius:20px; padding:32px 26px; transition:all .3s; backdrop-filter:blur(10px); }
+  .scard:hover { border-color:var(--border-o); background:rgba(255,107,0,.04); transform:translateY(-4px); }
+  .si { font-size:26px; margin-bottom:14px; }
+  .sn { font-size:16px; font-weight:600; margin-bottom:8px; letter-spacing:-.2px; }
+  .sd { font-size:12.5px; color:var(--muted); line-height:1.65; font-weight:300; }
+
+  /* CONTACT */
+  .csec { text-align:center; }
+  .ccard { background:var(--glass); border:1px solid var(--border); border-radius:28px; padding:68px 52px; max-width:600px; margin:0 auto; backdrop-filter:blur(20px); position:relative; overflow:hidden; }
+  .ccard::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at top,rgba(255,107,0,.09) 0%,transparent 60%); pointer-events:none; }
+  .cemail { font-size:clamp(18px,3vw,26px); font-weight:600; color:var(--orange); text-decoration:none; letter-spacing:-.3px; transition:color .2s; }
+  .cemail:hover { color:var(--orange-light); }
+  .socials { display:flex; gap:12px; justify-content:center; margin-top:32px; flex-wrap:wrap; }
+  .sl { display:flex; align-items:center; gap:8px; background:var(--glass); border:1px solid var(--border); border-radius:980px; padding:9px 18px; color:var(--text); text-decoration:none; font-size:12.5px; font-weight:500; transition:all .25s; }
+  .sl:hover { border-color:var(--orange); color:var(--orange); transform:translateY(-2px); box-shadow:0 8px 24px rgba(255,107,0,.15); }
+  .sl svg { width:15px; height:15px; fill:currentColor; flex-shrink:0; }
+
+  /* FOOTER */
+  footer { border-top:1px solid var(--border); padding:28px 52px; display:flex; align-items:center; justify-content:space-between; color:var(--muted); font-size:12px; letter-spacing:.2px; }
+  footer a { color:var(--muted); text-decoration:none; }
+  footer a:hover { color:var(--orange); }
+
+  /* MODAL */
+  .modal { position:fixed; inset:0; z-index:500; background:rgba(0,0,0,.94); backdrop-filter:blur(24px); display:flex; align-items:center; justify-content:center; padding:24px; opacity:0; pointer-events:none; transition:opacity .3s ease; }
+  .modal.on { opacity:1; pointer-events:all; }
+  .mc { position:relative; max-width:980px; width:100%; transform:scale(.93); transition:transform .35s cubic-bezier(.23,1,.32,1); }
+  .modal.on .mc { transform:scale(1); }
+  .mv { width:100%; display:block; border-radius:18px; max-height:78vh; background:#000; box-shadow:0 40px 100px rgba(0,0,0,.8),0 0 60px rgba(255,107,0,.1); }
+  .mclose { position:absolute; top:-46px; right:0; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.15); color:#fff; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:15px; transition:all .2s; }
+  .mclose:hover { background:rgba(255,107,0,.3); border-color:var(--orange); }
+  .minfo { margin-top:14px; display:flex; align-items:center; justify-content:space-between; }
+  .mtitle { font-size:17px; font-weight:600; letter-spacing:-.3px; }
+  .mcat { font-size:11px; color:var(--orange); letter-spacing:2px; text-transform:uppercase; font-weight:500; }
+
+  @media(max-width:768px){
+    nav { padding:0 20px; }
+    .nav-links { display:none; }
+    .sec { padding:60px 20px; }
+    .stats { grid-template-columns:1fr; }
+    .stat { border-right:none; border-bottom:1px solid var(--border); }
+    .stat:last-child { border-bottom:none; }
+    footer { flex-direction:column; gap:10px; text-align:center; padding:24px 20px; }
+    .ccard { padding:44px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg">
+  <div class="orb o1"></div>
+  <div class="orb o2"></div>
+  <div class="orb o3"></div>
+</div>
+
+<nav class="layer">
+  <div class="nav-logo">Graftmotion</div>
+  <ul class="nav-links">
+    <li><a href="#work">Work</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <a href="#contact" class="nav-cta">Get in Touch</a>
+</nav>
+
+<div class="layer">
+  <div class="hero">
+    <div class="hero-badge"><span class="dot"></span>Video Editing & Motion Design</div>
+    <h1 class="hero-h1">Crafting<br><span class="grad">Motion.</span></h1>
+    <p class="hero-sub">Premium video editing and visual effects that elevate brands, stories, and experiences to the next level.</p>
+    <div class="hero-btns">
+      <a href="#work" class="btn-p">View Work</a>
+      <a href="#contact" class="btn-s">Work With Me</a>
+    </div>
+    <div class="scroll-hint">
+      <div class="scroll-line"></div>
+      <span class="scroll-text">Scroll</span>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-n">100+</div><div class="stat-l">Projects</div></div>
+    <div class="stat"><div class="stat-n">3+</div><div class="stat-l">Years Exp</div></div>
+    <div class="stat"><div class="stat-n">∞</div><div class="stat-l">Creative Vision</div></div>
+  </div>
+
+  <section id="work" class="sec">
+    <p class="sec-label">Portfolio</p>
+    <h2 class="sec-title">Selected Work</h2>
+    <p class="sec-sub">A curated collection of video editing and motion design projects that push creative boundaries.</p>
+    <div class="vgrid" id="videoGrid">
+      <div class="loading-g"><div class="spinner"></div><p>Loading portfolio...</p></div>
+    </div>
+  </section>
+
+  <section id="services" class="sec" style="padding-top:0">
+    <p class="sec-label">What I Do</p>
+    <h2 class="sec-title">Services</h2>
+    <p class="sec-sub">Full-spectrum video production and post-production capabilities.</p>
+    <div class="sgrid">
+      <div class="scard"><div class="si">✂️</div><div class="sn">Video Editing</div><div class="sd">Precision cuts and narrative flow that keep audiences engaged from first frame to last.</div></div>
+      <div class="scard"><div class="si">✨</div><div class="sn">VFX & Motion</div><div class="sd">Visual effects and motion graphics that add cinematic production value to any project.</div></div>
+      <div class="scard"><div class="si">🎨</div><div class="sn">Color Grading</div><div class="sd">Professional color science that establishes mood, tone, and visual identity.</div></div>
+      <div class="scard"><div class="si">🔊</div><div class="sn">Sound Design</div><div class="sd">Immersive audio mixing and sound design that completes the visual experience.</div></div>
+    </div>
+  </section>
+
+  <section id="contact" class="sec csec">
+    <p class="sec-label">Let's Work Together</p>
+    <h2 class="sec-title" style="text-align:center;max-width:100%">Ready to create<br>something great?</h2>
+    <div style="height:48px"></div>
+    <div class="ccard">
+      <p style="color:var(--muted);font-size:15px;margin-bottom:24px;font-weight:300">Get in touch and let's bring your vision to life.</p>
+      <a href="https://www.instagram.com/graftmotion.vfx/" target="_blank" class="cemail">@graftmotion.vfx</a>
+      <div class="socials">
+        <a href="https://www.instagram.com/graftmotion.vfx/" target="_blank" class="sl">
+          <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+          Instagram
+        </a>
+        <a href="https://www.tiktok.com/@graftmotion" target="_blank" class="sl">
+          <svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.77a4.85 4.85 0 01-1.01-.08z"/></svg>
+          TikTok
+        </a>
+        <a href="https://x.com/Graftmotion" target="_blank" class="sl">
+          <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.258 5.63 5.906-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          X (Twitter)
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>© 2025 Graftmotion. All rights reserved.</span>
+    <span style="color:var(--orange)">Built with vision.</span>
+  </footer>
+</div>
+
+<!-- MODAL -->
+<div class="modal" id="modal">
+  <div class="mc">
+    <button class="mclose" id="mclose">✕</button>
+    <video class="mv" id="mvideo" controls autoplay playsinline></video>
+    <div class="minfo">
+      <div>
+        <div class="mtitle" id="mtitle"></div>
+        <div class="mcat" id="mcat"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---- JSONKEEPER CONFIG ----
+const JSONKEEPER_URL = 'https://jsonkeeper.com/b/RKV2R';
+
+// ---- FETCH VIDEOS FROM CLOUD ----
+async function fetchVideos() {
+  try {
+    const res = await fetch(JSONKEEPER_URL + '?nocache=' + Date.now());
+    if (!res.ok) throw new Error('fetch failed');
+    const data = await res.json();
+    return Array.isArray(data) ? data : (data.videos || []);
+  } catch (e) {
+    console.error('Could not load videos:', e);
+    return [];
+  }
+}
+
+// ---- RENDER GRID ----
+async function renderGrid() {
+  const grid = document.getElementById('videoGrid');
+  const vids = await fetchVideos();
+
+  if (!vids.length) {
+    grid.innerHTML = '<div class="empty-g"><div class="ei">🎬</div><p>Projects coming soon.</p></div>';
+    return;
+  }
+
+  grid.innerHTML = vids.map((v, i) => `
+    <div class="vcard" onclick="openModal(${i})">
+      <div class="vthumb">
+        ${v.thumbnailUrl
+          ? `<img src="${v.thumbnailUrl}" loading="lazy" alt="${v.title || ''}">`
+          : `<video src="${v.videoUrl}" muted preload="metadata"></video>`}
+        <div class="play-ov">
+          <div class="play-circle">
+            <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+          </div>
+        </div>
+      </div>
+      <div class="vinfo">
+        <div class="vtitle">${v.title || 'Untitled'}</div>
+        <div class="vmeta">${v.category || 'Motion Design'} · ${v.date || ''}</div>
+      </div>
+    </div>
+  `).join('');
+
+  // Store for modal use
+  window._gmVideos = vids;
+}
+
+// ---- MODAL ----
+function openModal(i) {
+  const vids = window._gmVideos || [];
+  const v = vids[i];
+  if (!v) return;
+  document.getElementById('mtitle').textContent = v.title || 'Untitled';
+  document.getElementById('mcat').textContent = v.category || 'Motion Design';
+  const vid = document.getElementById('mvideo');
+  vid.src = v.videoUrl;
+  document.getElementById('modal').classList.add('on');
+  document.body.style.overflow = 'hidden';
+  vid.play().catch(() => {});
+}
+
+function closeModal() {
+  const vid = document.getElementById('mvideo');
+  document.getElementById('modal').classList.remove('on');
+  document.body.style.overflow = '';
+  vid.pause();
+  vid.src = '';
+}
+
+document.getElementById('mclose').onclick = closeModal;
+document.getElementById('modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+renderGrid();
+</script>
+</body>
+</html>

@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Graftmotion — Admin</title>
+<style>
+  :root {
+    --orange: #FF6B00;
+    --orange-light: #FF8C00;
+    --orange-glow: rgba(255,107,0,.28);
+    --glass: rgba(255,255,255,.04);
+    --glass2: rgba(255,255,255,.07);
+    --border: rgba(255,255,255,.08);
+    --border-o: rgba(255,107,0,.3);
+    --text: #f5f5f7;
+    --muted: rgba(245,245,247,.48);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background:#000; color:var(--text);
+    font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;
+    min-height:100vh; overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  .bg { position:fixed; inset:0; z-index:0; overflow:hidden; }
+  .orb { position:absolute; border-radius:50%; filter:blur(80px); pointer-events:none; }
+  .o1 { width:60vw; height:60vw; top:-15vw; left:-10vw; background:radial-gradient(circle,rgba(255,107,0,.18) 0%,transparent 65%); animation:of1 14s ease-in-out infinite alternate; }
+  .o2 { width:40vw; height:40vw; bottom:-10vw; right:0; background:radial-gradient(circle,rgba(255,60,0,.12) 0%,transparent 65%); animation:of2 10s ease-in-out infinite alternate; }
+  @keyframes of1 { 0%{transform:translate(0,0);} 100%{transform:translate(4vw,5vh);} }
+  @keyframes of2 { 0%{transform:translate(0,0);} 100%{transform:translate(-5vw,-4vh);} }
+  .layer { position:relative; z-index:1; }
+
+  /* LOGIN */
+  .login-wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+  .login-box { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:24px; padding:52px 44px; width:100%; max-width:420px; backdrop-filter:blur(20px); text-align:center; }
+  .login-logo { font-size:22px; font-weight:700; letter-spacing:-.4px; background:linear-gradient(135deg,#fff 0%,#ffb347 60%,#FF6B00 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:8px; }
+  .login-sub { font-size:13px; color:var(--muted); margin-bottom:36px; }
+  .login-box input[type=password] { width:100%; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:13px 16px; color:#f5f5f7; font-size:14px; outline:none; transition:border .2s; margin-bottom:14px; font-family:inherit; }
+  .login-box input[type=password]:focus { border-color:rgba(255,107,0,.3); }
+  .login-box input[type=password]::placeholder { color:var(--muted); }
+  .login-btn { width:100%; background:#FF6B00; color:#fff; border:none; padding:13px; border-radius:980px; font-size:14px; font-weight:500; cursor:pointer; transition:all .2s; font-family:inherit; }
+  .login-btn:hover { background:#FF8C00; box-shadow:0 0 32px rgba(255,107,0,.28); }
+  .login-err { color:#ff4d4d; font-size:12px; margin-top:10px; min-height:16px; }
+
+  /* SETUP BANNER */
+  .setup-banner { background:rgba(255,107,0,.1); border:1px solid rgba(255,107,0,.3); border-radius:16px; padding:20px 24px; margin-bottom:28px; }
+  .setup-banner h3 { font-size:14px; font-weight:600; color:var(--orange); margin-bottom:10px; }
+  .setup-banner p { font-size:12.5px; color:var(--muted); line-height:1.7; }
+  .setup-banner a { color:var(--orange); }
+  .setup-fields { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px; }
+  .setup-save { margin-top:12px; background:var(--orange); color:#fff; border:none; padding:9px 20px; border-radius:980px; font-size:13px; font-weight:500; cursor:pointer; font-family:inherit; transition:all .2s; }
+  .setup-save:hover { background:var(--orange-light); }
+  .setup-ok { color:#4ade80; font-size:12px; margin-top:8px; display:none; }
+
+  /* TOPBAR */
+  .admin-wrap { display:none; min-height:100vh; }
+  .topbar { position:sticky; top:0; z-index:100; backdrop-filter:blur(24px) saturate(180%); background:rgba(0,0,0,.72); border-bottom:1px solid rgba(255,255,255,.08); padding:0 44px; height:60px; display:flex; align-items:center; justify-content:space-between; }
+  .topbar-logo { font-size:17px; font-weight:700; letter-spacing:-.3px; background:linear-gradient(135deg,#fff,#FF6B00); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .topbar-right { display:flex; align-items:center; gap:16px; }
+  .topbar-badge { background:rgba(255,107,0,.15); border:1px solid rgba(255,107,0,.3); color:#FF6B00; font-size:10.5px; font-weight:600; letter-spacing:2px; text-transform:uppercase; padding:4px 12px; border-radius:980px; }
+  .btn-sm { background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.08); color:#f5f5f7; padding:7px 14px; border-radius:980px; font-size:12.5px; font-weight:500; cursor:pointer; text-decoration:none; transition:all .2s; font-family:inherit; }
+  .btn-sm:hover { border-color:rgba(255,255,255,.2); }
+
+  /* MAIN */
+  .admin-main { padding:44px; max-width:1100px; margin:0 auto; }
+  .upload-card { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:20px; padding:36px; backdrop-filter:blur(10px); margin-bottom:40px; }
+  .card-title { font-size:18px; font-weight:600; letter-spacing:-.3px; margin-bottom:24px; }
+  .upload-drop { border:2px dashed rgba(255,255,255,.1); border-radius:16px; padding:48px 24px; text-align:center; cursor:pointer; transition:all .3s; }
+  .upload-drop:hover, .upload-drop.drag { border-color:#FF6B00; background:rgba(255,107,0,.04); }
+  .upload-drop input[type=file] { display:none; }
+  .upload-icon { font-size:40px; margin-bottom:14px; opacity:.5; }
+  .upload-drop p { font-size:14px; color:var(--muted); line-height:1.6; }
+  .upload-drop span { color:#FF6B00; }
+
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:20px; }
+  .form-group { display:flex; flex-direction:column; gap:6px; }
+  .form-group label { font-size:11.5px; color:var(--muted); letter-spacing:.5px; text-transform:uppercase; font-weight:500; }
+  .form-group input, .form-group select { background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:11px 14px; color:#f5f5f7; font-size:13.5px; outline:none; transition:border .2s; font-family:inherit; }
+  .form-group input:focus, .form-group select:focus { border-color:rgba(255,107,0,.3); }
+  .form-group input::placeholder { color:var(--muted); }
+  .form-group select option { background:#1a1a1a; }
+
+  /* FILE PREVIEW */
+  .file-preview { background:rgba(255,107,0,.06); border:1px solid rgba(255,107,0,.2); border-radius:12px; padding:12px 16px; display:none; align-items:center; gap:12px; margin-top:16px; }
+  .fp-icon { font-size:20px; flex-shrink:0; }
+  .fp-name { font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .fp-size { font-size:11px; color:var(--muted); }
+  .fp-remove { margin-left:auto; background:none; border:none; color:var(--muted); cursor:pointer; font-size:16px; padding:2px 6px; flex-shrink:0; transition:color .2s; }
+  .fp-remove:hover { color:#ff4d4d; }
+
+  /* PROGRESS */
+  .progress-wrap { margin-top:16px; display:none; }
+  .progress-label { font-size:12px; color:var(--muted); margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; }
+  .progress-label .pstatus { color:var(--orange); font-weight:500; }
+  .progress-bar-bg { background:rgba(255,255,255,.07); border-radius:980px; height:5px; overflow:hidden; }
+  .progress-bar { height:100%; background:linear-gradient(90deg,#FF6B00,#FF8C00); border-radius:980px; width:0; transition:width .3s ease; }
+
+  .upload-submit { margin-top:20px; background:#FF6B00; color:#fff; border:none; padding:12px 32px; border-radius:980px; font-size:14px; font-weight:500; cursor:pointer; transition:all .25s; font-family:inherit; }
+  .upload-submit:hover { background:#FF8C00; box-shadow:0 0 32px rgba(255,107,0,.28); }
+  .upload-submit:disabled { opacity:.5; cursor:not-allowed; }
+  .upload-msg { margin-top:12px; font-size:13px; min-height:18px; }
+  .msg-ok { color:#4ade80; }
+  .msg-err { color:#ff4d4d; }
+
+  /* VIDEO LIST */
+  .vlist-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+  .vcount { font-size:13px; color:var(--muted); }
+  .vlist { display:flex; flex-direction:column; gap:12px; }
+  .vitem { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:16px 20px; display:grid; grid-template-columns:80px 1fr auto; gap:16px; align-items:center; transition:border .25s; }
+  .vitem:hover { border-color:rgba(255,107,0,.3); }
+  .vthumb-sm { width:80px; height:45px; border-radius:8px; overflow:hidden; background:#111; flex-shrink:0; }
+  .vthumb-sm img { width:100%; height:100%; object-fit:cover; }
+  .vi-meta { min-width:0; }
+  .vi-title { font-size:14px; font-weight:500; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .vi-sub { font-size:11.5px; color:var(--muted); display:flex; gap:10px; flex-wrap:wrap; }
+  .vi-cat { color:#FF6B00; }
+  .vi-actions { display:flex; gap:8px; flex-shrink:0; }
+  .vi-btn { background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.08); color:#f5f5f7; padding:6px 12px; border-radius:980px; font-size:12px; font-weight:500; cursor:pointer; transition:all .2s; font-family:inherit; }
+  .vi-btn:hover { background:rgba(255,255,255,.1); }
+  .vi-del { background:rgba(255,77,77,.08); border:1px solid rgba(255,77,77,.2); color:#ff6b6b; padding:6px 12px; border-radius:980px; font-size:12px; font-weight:500; cursor:pointer; transition:all .2s; font-family:inherit; }
+  .vi-del:hover { background:rgba(255,77,77,.2); border-color:rgba(255,77,77,.5); }
+  .vlist-empty { text-align:center; padding:60px 20px; color:var(--muted); }
+  .vlist-empty .ei { font-size:36px; opacity:.3; margin-bottom:12px; }
+  .spinner { width:24px; height:24px; border:2px solid rgba(255,107,0,.2); border-top-color:var(--orange); border-radius:50%; animation:spin .7s linear infinite; margin:0 auto 10px; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  /* EDIT MODAL */
+  .edit-modal { position:fixed; inset:0; z-index:300; background:rgba(0,0,0,.88); backdrop-filter:blur(20px); display:flex; align-items:center; justify-content:center; padding:24px; opacity:0; pointer-events:none; transition:opacity .25s; }
+  .edit-modal.on { opacity:1; pointer-events:all; }
+  .edit-box { background:#111; border:1px solid rgba(255,255,255,.08); border-radius:24px; padding:40px 36px; width:100%; max-width:440px; transform:scale(.95); transition:transform .3s cubic-bezier(.23,1,.32,1); }
+  .edit-modal.on .edit-box { transform:scale(1); }
+  .edit-title { font-size:18px; font-weight:600; margin-bottom:24px; letter-spacing:-.3px; }
+  .edit-actions { display:flex; gap:10px; margin-top:24px; justify-content:flex-end; }
+  .btn-cancel { background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.08); color:#f5f5f7; padding:10px 20px; border-radius:980px; font-size:13px; font-weight:500; cursor:pointer; transition:all .2s; font-family:inherit; }
+  .btn-save { background:#FF6B00; color:#fff; border:none; padding:10px 22px; border-radius:980px; font-size:13px; font-weight:500; cursor:pointer; transition:all .2s; font-family:inherit; }
+  .btn-save:hover { background:#FF8C00; }
+
+  @media(max-width:640px){
+    .topbar { padding:0 20px; }
+    .admin-main { padding:24px 16px; }
+    .form-row { grid-template-columns:1fr; }
+    .setup-fields { grid-template-columns:1fr; }
+    .vitem { grid-template-columns:60px 1fr; }
+    .vi-actions { grid-column:1/-1; }
+  }
+</style>
+</head>
+<body>
+<div class="bg layer">
+  <div class="orb o1"></div>
+  <div class="orb o2"></div>
+</div>
+
+<!-- LOGIN -->
+<div class="login-wrap layer" id="loginWrap">
+  <div class="login-box">
+    <div class="login-logo">Graftmotion</div>
+    <p class="login-sub">Admin Access</p>
+    <input type="password" id="passInput" placeholder="Enter password" onkeydown="if(event.key==='Enter')login()">
+    <button class="login-btn" onclick="login()">Enter</button>
+    <p class="login-err" id="loginErr"></p>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div class="admin-wrap layer" id="adminWrap">
+  <div class="topbar">
+    <div class="topbar-logo">Graftmotion</div>
+    <div class="topbar-right">
+      <span class="topbar-badge">Admin</span>
+      <a href="index.html" target="_blank" class="btn-sm">View Site ↗</a>
+      <button class="btn-sm" onclick="logout()">Log Out</button>
+    </div>
+  </div>
+
+  <div class="admin-main">
+
+    <!-- CLOUDINARY SETUP -->
+    <div class="setup-banner" id="setupBanner">
+      <h3>⚡ One-time Cloudinary Setup Required</h3>
+      <p>
+        Videos are hosted on <a href="https://cloudinary.com" target="_blank">Cloudinary</a> (free) — no size limit, works on all devices.<br>
+        <strong>2-minute setup:</strong><br>
+        1. <a href="https://cloudinary.com" target="_blank">cloudinary.com</a> → Sign up free → Dashboard → copy your <strong>Cloud Name</strong><br>
+        2. Settings → Upload → Upload presets → Add preset → set to <strong>Unsigned</strong> → Save → copy preset name<br>
+        3. Paste both below and click Save
+      </p>
+      <div class="setup-fields">
+        <div class="form-group">
+          <label>Cloud Name</label>
+          <input type="text" id="cloudName" placeholder="e.g. mycloud123">
+        </div>
+        <div class="form-group">
+          <label>Upload Preset</label>
+          <input type="text" id="uploadPreset" placeholder="e.g. ml_default">
+        </div>
+      </div>
+      <button class="setup-save" onclick="saveCloudinary()">Save Cloudinary Settings</button>
+      <p class="setup-ok" id="setupOk">✓ Saved! You can now upload videos.</p>
+    </div>
+
+    <!-- UPLOAD -->
+    <div class="upload-card">
+      <h2 class="card-title">Upload Video</h2>
+      <div class="upload-drop" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        <input type="file" id="fileInput" accept="video/*" onchange="fileSelected(this.files[0])">
+        <div class="upload-icon">🎬</div>
+        <p>Drop your video here or <span>browse files</span><br>
+        <small style="font-size:11px;opacity:.6">MP4, MOV, AVI, WebM — any size</small></p>
+      </div>
+      <div class="file-preview" id="filePreview">
+        <div class="fp-icon">🎞️</div>
+        <div style="min-width:0;flex:1">
+          <div class="fp-name" id="fpName"></div>
+          <div class="fp-size" id="fpSize"></div>
+        </div>
+        <button class="fp-remove" onclick="clearFile()">✕</button>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Title</label>
+          <input type="text" id="vTitle" placeholder="e.g. Brand Reel 2024">
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select id="vCat">
+            <option>Motion Design</option>
+            <option>Video Editing</option>
+            <option>VFX</option>
+            <option>Color Grade</option>
+            <option>Brand Film</option>
+            <option>Short Film</option>
+          </select>
+        </div>
+      </div>
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-label">
+          <span class="pstatus" id="progressStatus">Uploading to Cloudinary...</span>
+          <span id="progressPct">0%</span>
+        </div>
+        <div class="progress-bar-bg"><div class="progress-bar" id="progressBar"></div></div>
+      </div>
+      <button class="upload-submit" id="uploadBtn" onclick="uploadVideo()">Upload Video</button>
+      <p class="upload-msg" id="uploadMsg"></p>
+    </div>
+
+    <!-- VIDEO LIST -->
+    <div>
+      <div class="vlist-header">
+        <h2 style="font-size:18px;font-weight:600;letter-spacing:-.3px">Your Videos</h2>
+        <span class="vcount" id="vcount"></span>
+      </div>
+      <div class="vlist" id="vlist"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="edit-modal" id="editModal">
+  <div class="edit-box">
+    <h3 class="edit-title">Edit Video</h3>
+    <div class="form-group" style="margin-bottom:14px">
+      <label>Title</label>
+      <input type="text" id="editTitle" placeholder="Video title">
+    </div>
+    <div class="form-group">
+      <label>Category</label>
+      <select id="editCat">
+        <option>Motion Design</option>
+        <option>Video Editing</option>
+        <option>VFX</option>
+        <option>Color Grade</option>
+        <option>Brand Film</option>
+        <option>Short Film</option>
+      </select>
+    </div>
+    <div class="edit-actions">
+      <button class="btn-cancel" onclick="closeEdit()">Cancel</button>
+      <button class="btn-save" onclick="saveEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---- CONFIG ----
+const PASS = 'graftmotion2024';
+const JSONKEEPER_URL = 'https://jsonkeeper.com/b/RKV2R';
+
+// ---- AUTH ----
+function login() {
+  const p = document.getElementById('passInput').value;
+  const err = document.getElementById('loginErr');
+  if (p === PASS) {
+    sessionStorage.setItem('gm_auth', '1');
+    document.getElementById('loginWrap').style.display = 'none';
+    document.getElementById('adminWrap').style.display = 'block';
+    initAdmin();
+  } else {
+    err.textContent = 'Incorrect password.';
+    setTimeout(() => err.textContent = '', 2000);
+  }
+}
+
+function logout() {
+  sessionStorage.removeItem('gm_auth');
+  location.reload();
+}
+
+if (sessionStorage.getItem('gm_auth') === '1') {
+  document.getElementById('loginWrap').style.display = 'none';
+  document.getElementById('adminWrap').style.display = 'block';
+  initAdmin();
+}
+
+function initAdmin() {
+  loadCloudinarySettings();
+  renderList();
+}
+
+// ---- CLOUDINARY SETTINGS (stored locally — just credentials, not video data) ----
+function loadCloudinarySettings() {
+  const cn = localStorage.getItem('gm_cloud_name');
+  const up = localStorage.getItem('gm_upload_preset');
+  if (cn) document.getElementById('cloudName').value = cn;
+  if (up) document.getElementById('uploadPreset').value = up;
+  if (cn && up) document.getElementById('setupBanner').style.display = 'none';
+}
+
+function saveCloudinary() {
+  const cn = document.getElementById('cloudName').value.trim();
+  const up = document.getElementById('uploadPreset').value.trim();
+  if (!cn || !up) { alert('Please fill in both fields.'); return; }
+  localStorage.setItem('gm_cloud_name', cn);
+  localStorage.setItem('gm_upload_preset', up);
+  document.getElementById('setupOk').style.display = 'block';
+  setTimeout(() => { document.getElementById('setupBanner').style.display = 'none'; }, 1500);
+}
+
+// ---- JSONKEEPER STORAGE ----
+async function getVideos() {
+  try {
+    const res = await fetch(JSONKEEPER_URL + '?nocache=' + Date.now());
+    if (!res.ok) throw new Error('fetch failed');
+    const data = await res.json();
+    return Array.isArray(data) ? data : (data.videos || []);
+  } catch (e) {
+    console.error('Could not fetch videos:', e);
+    return [];
+  }
+}
+
+async function saveVideos(arr) {
+  try {
+    const res = await fetch(JSONKEEPER_URL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(arr)
+    });
+    if (!res.ok) throw new Error('save failed: ' + res.status);
+    return true;
+  } catch (e) {
+    console.error('Could not save videos:', e);
+    return false;
+  }
+}
+
+// ---- FILE SELECT ----
+let selectedFile = null;
+
+function fileSelected(file) {
+  if (!file) return;
+  selectedFile = file;
+  document.getElementById('filePreview').style.display = 'flex';
+  document.getElementById('fpName').textContent = file.name;
+  document.getElementById('fpSize').textContent = formatSize(file.size);
+  const t = document.getElementById('vTitle');
+  if (!t.value) t.value = file.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
+}
+
+function clearFile() {
+  selectedFile = null;
+  document.getElementById('fileInput').value = '';
+  document.getElementById('filePreview').style.display = 'none';
+}
+
+function formatSize(b) {
+  if (b > 1073741824) return (b / 1073741824).toFixed(1) + ' GB';
+  if (b > 1048576) return (b / 1048576).toFixed(1) + ' MB';
+  return (b / 1024).toFixed(0) + ' KB';
+}
+
+// Drag & drop
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('drag');
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('video/')) fileSelected(f);
+});
+
+// ---- UPLOAD TO CLOUDINARY, THEN SAVE URL TO JSONKEEPER ----
+function uploadVideo() {
+  const msg = document.getElementById('uploadMsg');
+  const cloudName = localStorage.getItem('gm_cloud_name');
+  const uploadPreset = localStorage.getItem('gm_upload_preset');
+
+  if (!cloudName || !uploadPreset) {
+    msg.className = 'upload-msg msg-err';
+    msg.textContent = 'Please set up your Cloudinary credentials first (see the setup box above).';
+    document.getElementById('setupBanner').style.display = 'block';
+    return;
+  }
+  if (!selectedFile) {
+    msg.className = 'upload-msg msg-err';
+    msg.textContent = 'Please select a video file.';
+    return;
+  }
+
+  const title = document.getElementById('vTitle').value.trim() || selectedFile.name.replace(/\.[^.]+$/, '');
+  const cat = document.getElementById('vCat').value;
+  const btn = document.getElementById('uploadBtn');
+
+  btn.disabled = true;
+  msg.textContent = '';
+
+  const pw = document.getElementById('progressWrap');
+  const pb = document.getElementById('progressBar');
+  const pp = document.getElementById('progressPct');
+  const ps = document.getElementById('progressStatus');
+  pw.style.display = 'block';
+  pb.style.width = '0';
+
+  const formData = new FormData();
+  formData.append('file', selectedFile);
+  formData.append('upload_preset', uploadPreset);
+  formData.append('resource_type', 'video');
+
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`);
+
+  xhr.upload.onprogress = e => {
+    if (e.lengthComputable) {
+      const pct = Math.round(e.loaded / e.total * 100);
+      pb.style.width = pct + '%';
+      pp.textContent = pct + '%';
+      ps.textContent = pct < 100 ? 'Uploading to Cloudinary...' : 'Processing video...';
+    }
+  };
+
+  xhr.onload = async () => {
+    btn.disabled = false;
+    pw.style.display = 'none';
+    pb.style.width = '0';
+
+    if (xhr.status === 200) {
+      const res = JSON.parse(xhr.responseText);
+
+      // Build video entry
+      const newVideo = {
+        id: Date.now(),
+        title,
+        category: cat,
+        date: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+        videoUrl: res.secure_url,
+        thumbnailUrl: res.secure_url.replace('/upload/', '/upload/so_0,f_jpg/').replace(/\.[^.]+$/, '.jpg'),
+        publicId: res.public_id,
+        duration: res.duration ? Math.round(res.duration) + 's' : ''
+      };
+
+      // Show saving status
+      msg.className = 'upload-msg';
+      msg.textContent = 'Video uploaded. Saving to portfolio...';
+
+      const vids = await getVideos();
+      vids.push(newVideo);
+      const saved = await saveVideos(vids);
+
+      if (saved) {
+        msg.className = 'upload-msg msg-ok';
+        msg.textContent = '✓ Video uploaded and published to your portfolio!';
+        setTimeout(() => msg.textContent = '', 5000);
+        clearFile();
+        document.getElementById('vTitle').value = '';
+        renderList();
+      } else {
+        msg.className = 'upload-msg msg-err';
+        msg.textContent = 'Video uploaded to Cloudinary but failed to save to database. Check your internet connection and try again.';
+      }
+    } else {
+      let errMsg = 'Upload failed.';
+      try {
+        const errRes = JSON.parse(xhr.responseText);
+        errMsg = errRes.error?.message || errMsg;
+      } catch {}
+      msg.className = 'upload-msg msg-err';
+      msg.textContent = 'Error: ' + errMsg;
+    }
+  };
+
+  xhr.onerror = () => {
+    btn.disabled = false;
+    pw.style.display = 'none';
+    msg.className = 'upload-msg msg-err';
+    msg.textContent = 'Network error. Check your Cloudinary settings and try again.';
+  };
+
+  xhr.send(formData);
+}
+
+// ---- RENDER LIST ----
+async function renderList() {
+  const list = document.getElementById('vlist');
+  list.innerHTML = '<div class="vlist-empty"><div class="spinner"></div><p>Loading...</p></div>';
+
+  const vids = await getVideos();
+  document.getElementById('vcount').textContent = vids.length + ' video' + (vids.length !== 1 ? 's' : '');
+
+  if (!vids.length) {
+    list.innerHTML = '<div class="vlist-empty"><div class="ei">📂</div><p>No videos yet. Upload your first one above.</p></div>';
+    return;
+  }
+
+  list.innerHTML = vids.map((v, i) => `
+    <div class="vitem">
+      <div class="vthumb-sm">
+        ${v.thumbnailUrl
+          ? `<img src="${v.thumbnailUrl}" onerror="this.style.display='none'">`
+          : `<div style="width:100%;height:100%;background:#1a1a1a;border-radius:8px"></div>`}
+      </div>
+      <div class="vi-meta">
+        <div class="vi-title">${v.title || 'Untitled'}</div>
+        <div class="vi-sub">
+          <span class="vi-cat">${v.category}</span>
+          <span>${v.date}</span>
+          ${v.duration ? `<span>${v.duration}</span>` : ''}
+        </div>
+      </div>
+      <div class="vi-actions">
+        <button class="vi-btn" onclick="openEdit(${i})">Edit</button>
+        <button class="vi-del" onclick="deleteVideo(${i})">Delete</button>
+      </div>
+    </div>
+  `).join('');
+
+  // Cache for edit/delete
+  window._adminVideos = vids;
+}
+
+// ---- DELETE ----
+async function deleteVideo(i) {
+  const vids = window._adminVideos || await getVideos();
+  const v = vids[i];
+  if (!confirm(`Delete "${v.title || 'this video'}"?`)) return;
+
+  const btn = document.querySelectorAll('.vi-del')[i];
+  if (btn) { btn.disabled = true; btn.textContent = 'Deleting...'; }
+
+  vids.splice(i, 1);
+  const saved = await saveVideos(vids);
+
+  if (saved) {
+    renderList();
+  } else {
+    if (btn) { btn.disabled = false; btn.textContent = 'Delete'; }
+    alert('Failed to delete. Check your internet connection.');
+  }
+}
+
+// ---- EDIT ----
+let editIdx = -1;
+
+function openEdit(i) {
+  const vids = window._adminVideos || [];
+  editIdx = i;
+  document.getElementById('editTitle').value = vids[i].title || '';
+  document.getElementById('editCat').value = vids[i].category || 'Motion Design';
+  document.getElementById('editModal').classList.add('on');
+}
+
+function closeEdit() {
+  document.getElementById('editModal').classList.remove('on');
+  editIdx = -1;
+}
+
+async function saveEdit() {
+  if (editIdx < 0) return;
+  const vids = window._adminVideos || await getVideos();
+  vids[editIdx].title = document.getElementById('editTitle').value.trim() || vids[editIdx].title;
+  vids[editIdx].category = document.getElementById('editCat').value;
+
+  const saveBtn = document.querySelector('.btn-save');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Saving...';
+
+  const saved = await saveVideos(vids);
+  saveBtn.disabled = false;
+  saveBtn.textContent = 'Save Changes';
+
+  if (saved) {
+    closeEdit();
+    renderList();
+  } else {
+    alert('Failed to save changes. Check your internet connection.');
+  }
+}
+
+document.getElementById('editModal').addEventListener('click', function(e) { if (e.target === this) closeEdit(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeEdit(); });
+</script>
+</body>
+</html>
